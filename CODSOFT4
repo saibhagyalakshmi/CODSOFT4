@@ -1,0 +1,33 @@
+import pandas as pd
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+# Sample movie dataset
+data = {
+    'movie_id': [1, 2, 3, 4, 5],
+    'title': ['Movie A', 'Movie B', 'Movie C', 'Movie D', 'Movie E'],
+    'genres': ['Action|Adventure', 'Comedy|Drama', 'Action|Drama', 'Horror', 'Comedy']
+}
+
+movies = pd.DataFrame(data)
+
+# TF-IDF Vectorization
+tfidf_vectorizer = TfidfVectorizer(stop_words='english', tokenizer=lambda x: x.split('|'))
+tfidf_matrix = tfidf_vectorizer.fit_transform(movies['genres'])
+
+# Calculate cosine similarity
+cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
+
+# Function to get movie recommendations
+def get_recommendations(movie_title, cosine_sim_matrix, df, num_recommendations=5):
+    movie_idx = df.index[df['title'] == movie_title].tolist()[0]
+    similar_scores = list(enumerate(cosine_sim_matrix[movie_idx]))
+    similar_scores = sorted(similar_scores, key=lambda x: x[1], reverse=True)
+    similar_movies_idx = [i[0] for i in similar_scores[1:num_recommendations+1]]
+    return df['title'].iloc[similar_movies_idx]
+
+# Example usage
+movie_title = 'Movie A'
+recommendations = get_recommendations(movie_title, cosine_sim, movies)
+print(f"Recommended movies for '{movie_title}':")
+print(recommendations)
